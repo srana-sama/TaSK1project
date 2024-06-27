@@ -1,0 +1,170 @@
+#include <iostream>
+#include <unordered_map>
+#include <string>
+
+using namespace std;
+
+class Account {
+private:
+    string accountNumber;
+    string pin;
+    double balance;
+
+public:
+    Account(string accNumber, string accPin, double initialBalance = 0.0)
+        : accountNumber(accNumber), pin(accPin), balance(initialBalance) {}
+
+    string getAccountNumber() const {
+        return accountNumber;
+    }
+
+    bool validatePIN(const string& enteredPin) const {
+        return pin == enteredPin;
+    }
+
+    double getBalance() const {
+        return balance;
+    }
+
+    void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+            cout << "Deposit successful. New balance: $" << balance << endl;
+        } else {
+            cout << "Invalid amount." << endl;
+        }
+    }
+
+    void withdraw(double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+            cout << "Withdrawal successful. New balance: $" << balance << endl;
+        } else {
+            cout << "Invalid amount or insufficient funds." << endl;
+        }
+    }
+
+    void transfer(Account& toAccount, double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+            toAccount.deposit(amount);
+            cout << "Transfer successful. New balance: $" << balance << endl;
+        } else {
+            cout << "Invalid amount or insufficient funds." << endl;
+        }
+    }
+};
+
+class BankingSystem {
+private:
+    unordered_map<string, Account> accounts;
+
+public:
+    void createAccount(const string& accountNumber, const string& pin) {
+        if (accounts.find(accountNumber) == accounts.end()) {
+            accounts[accountNumber] = Account(accountNumber, pin);
+            cout << "Account created successfully!" << endl;
+        } else {
+            cout << "Account already exists!" << endl;
+        }
+    }
+
+    Account* authenticate(const string& accountNumber, const string& pin) {
+        if (accounts.find(accountNumber) != accounts.end()) {
+            if (accounts[accountNumber].validatePIN(pin)) {
+                return &accounts[accountNumber];
+            } else {
+                cout << "Invalid PIN." << endl;
+            }
+        } else {
+            cout << "Account not found." << endl;
+        }
+        return nullptr;
+    }
+
+    void displayMenu() {
+        cout << "1. Create Account\n"
+             << "2. Balance Inquiry\n"
+             << "3. Deposit\n"
+             << "4. Withdraw\n"
+             << "5. Transfer\n"
+             << "6. Exit\n";
+    }
+};
+
+int main() {
+    BankingSystem bank;
+    int choice;
+    string accountNumber, pin, newPin, toAccountNumber;
+    double amount;
+
+    while (true) {
+        bank.displayMenu();
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                bank.createAccount(accountNumber, pin);
+                break;
+            case 2:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                if (Account* account = bank.authenticate(accountNumber, pin)) {
+                    cout << "Current balance: $" << account->getBalance() << endl;
+                }
+                break;
+            case 3:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                if (Account* account = bank.authenticate(accountNumber, pin)) {
+                    cout << "Enter amount to deposit: ";
+                    cin >> amount;
+                    account->deposit(amount);
+                }
+                break;
+            case 4:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                if (Account* account = bank.authenticate(accountNumber, pin)) {
+                    cout << "Enter amount to withdraw: ";
+                    cin >> amount;
+                    account->withdraw(amount);
+                }
+                break;
+            case 5:
+                cout << "Enter your account number: ";
+                cin >> accountNumber;
+                cout << "Enter your PIN: ";
+                cin >> pin;
+                if (Account* fromAccount = bank.authenticate(accountNumber, pin)) {
+                    cout << "Enter recipient's account number: ";
+                    cin >> toAccountNumber;
+                    if (Account* toAccount = bank.authenticate(toAccountNumber, "")) {
+                        cout << "Enter amount to transfer: ";
+                        cin >> amount;
+                        fromAccount->transfer(*toAccount, amount);
+                    } else {
+                        cout << "Recipient account not found." << endl;
+                    }
+                }
+                break;
+            case 6:
+                cout << "Exiting..." << endl;
+                return 0;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    }
+    return 0;
+}
