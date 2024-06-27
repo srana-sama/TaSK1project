@@ -1,0 +1,159 @@
+#include <iostream>
+#include <unordered_map>
+#include <string>
+
+using namespace std;
+
+class Account {
+private:
+    string accountNumber;
+    string pin;
+    double balance;
+
+public:
+    Account(string accNumber, string accPin, double initialBalance = 0.0)
+        : accountNumber(accNumber), pin(accPin), balance(initialBalance) {}
+
+    string getAccountNumber() const {
+        return accountNumber;
+    }
+
+    bool validatePIN(const string& enteredPin) const {
+        return pin == enteredPin;
+    }
+
+    double getBalance() const {
+        return balance;
+    }
+
+    void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+        } else {
+            cout << "Invalid amount." << endl;
+        }
+    }
+
+    void withdraw(double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+        } else {
+            cout << "Invalid amount or insufficient funds." << endl;
+        }
+    }
+
+    void changePIN(const string& newPin) {
+        pin = newPin;
+    }
+};
+
+class ATM {
+private:
+    unordered_map<string, Account> accounts;
+
+public:
+    void createAccount(const string& accountNumber, const string& pin) {
+        if (accounts.find(accountNumber) == accounts.end()) {
+            accounts[accountNumber] = Account(accountNumber, pin);
+            cout << "Account created successfully!" << endl;
+        } else {
+            cout << "Account already exists!" << endl;
+        }
+    }
+
+    Account* authenticate(const string& accountNumber, const string& pin) {
+        if (accounts.find(accountNumber) != accounts.end()) {
+            if (accounts[accountNumber].validatePIN(pin)) {
+                return &accounts[accountNumber];
+            } else {
+                cout << "Invalid PIN." << endl;
+            }
+        } else {
+            cout << "Account not found." << endl;
+        }
+        return nullptr;
+    }
+
+    void displayMenu() {
+        cout << "1. Create Account\n"
+             << "2. Balance Inquiry\n"
+             << "3. Deposit\n"
+             << "4. Withdraw\n"
+             << "5. Change PIN\n"
+             << "6. Exit\n";
+    }
+};
+
+int main() {
+    ATM atm;
+    int choice;
+    string accountNumber, pin, newPin;
+    double amount;
+
+    while (true) {
+        atm.displayMenu();
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                atm.createAccount(accountNumber, pin);
+                break;
+            case 2:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                if (Account* account = atm.authenticate(accountNumber, pin)) {
+                    cout << "Current balance: $" << account->getBalance() << endl;
+                }
+                break;
+            case 3:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                if (Account* account = atm.authenticate(accountNumber, pin)) {
+                    cout << "Enter amount to deposit: ";
+                    cin >> amount;
+                    account->deposit(amount);
+                    cout << "Deposit successful. New balance: $" << account->getBalance() << endl;
+                }
+                break;
+            case 4:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter PIN: ";
+                cin >> pin;
+                if (Account* account = atm.authenticate(accountNumber, pin)) {
+                    cout << "Enter amount to withdraw: ";
+                    cin >> amount;
+                    account->withdraw(amount);
+                    cout << "Withdrawal successful. New balance: $" << account->getBalance() << endl;
+                }
+                break;
+            case 5:
+                cout << "Enter account number: ";
+                cin >> accountNumber;
+                cout << "Enter current PIN: ";
+                cin >> pin;
+                if (Account* account = atm.authenticate(accountNumber, pin)) {
+                    cout << "Enter new PIN: ";
+                    cin >> newPin;
+                    account->changePIN(newPin);
+                    cout << "PIN changed successfully!" << endl;
+                }
+                break;
+            case 6:
+                cout << "Exiting..." << endl;
+                return 0;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+        }
+    }
+    return 0;
+}
